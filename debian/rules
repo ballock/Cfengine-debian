@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 # vim:noet:ts=4:sw=4:
 
+export DH_VERBOSE=1
+
 %:
 	dh $@ --with quilt
 
@@ -25,6 +27,9 @@ override_dh_auto_configure:
 				--htmldir=\$${prefix}/share/doc/cfengine3/html \
 				CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,relro" \
 				CPPFLAGS=-D_FORTIFY_SOURCE=2
+
+override_dh_auto_test:
+	/bin/true
 
 override_dh_clean:
 	dh_autoreconf_clean
