@@ -27,14 +27,37 @@ set_permissions() {
     chmod 700 $WORKDIR/outputs
 }
 
-make_key () {
+make_key() {
     if [ ! -f $WORKDIR/ppkeys/localhost.priv ]; then
         cf-key
     fi
 }
 
+move_inputs_if_needed() {
+    # Migration function: if the inputdir is pointing to /etc/cfengine3, then
+    # create a new input dir and copy the files.
+    CONFIG_DEST=$(readlink $INPUTS)
+    INPUTS_MOVED=0
+    if [ "$CONFIG_DEST" = "/etc/cfengine3" ]; then
+        rm $INPUTS
+        # Permissions will be set by set_permissions() afterwards
+        mkdir $INPUTS
+        cp -a /etc/cfengine3/* $INPUTS
+        INPUTS_MOVED=1
+    fi
+    
+    # Also warn the user by creating a file; this news is also advertised in NEWS.Debian.
+    FILE_WARNING="/etc/cfengine3/README_inputs_now_in_var_lib"
+    if [ "$INPUTS_MOVED" -eq 1 -a ! -f "$FILE_WARNING" ]; then
+        echo "Since 3.6.2, the authoritative input files are now in /var/lib/cfengine3/inputs." >> $FILE_WARNING
+        echo "Existing input files at the time of the upgrade were copied over to that dir." >> $FILE_WARNING
+        echo "Feel free to remove the input files in /etc/cfengine3 if needed." >> $FILE_WARNING
+    fi
+}
+
 case "$1" in
     configure)
+    	move_inputs_if_needed
         set_permissions
         make_key
     ;;

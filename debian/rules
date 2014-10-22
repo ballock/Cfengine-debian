@@ -1,35 +1,27 @@
 #!/usr/bin/make -f
 # vim:noet:ts=4:sw=4:
 
-export DH_VERBOSE=1
-
 %:
 	dh $@ --with quilt
 
 override_dh_auto_configure:
 	dh_autoreconf
-	./configure --enable-shared=yes \
-				--prefix=/usr \
-				--with-sql=yes \
-				--with-mysql \
-				--with-postgresql \
-				--with-libvirt \
-				--with-lmdb \
-				--with-libxml2 \
-				--with-workdir=/var/lib/cfengine3 \
-				--with-logdir=/var/log/cfengine3 \
-				--with-piddir=/run/cfengine3 \
-				--libdir=/usr/lib/cfengine3 \
-				--docdir=\$${prefix}/share/doc/cfengine3 \
-				--datadir=\$${prefix}/share/cfengine3 \
-				--mandir=\$${prefix}/share/man \
-				--infodir=\$${prefix}/share/info \
-				--htmldir=\$${prefix}/share/doc/cfengine3/html \
-				CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,relro" \
-				CPPFLAGS=-D_FORTIFY_SOURCE=2
-
-override_dh_auto_test:
-	/bin/true
+	./configure 	--prefix=/usr \
+			--with-sql=yes \
+			--with-mysql \
+			--with-postgresql \
+			--with-libvirt \
+			--with-lmdb \
+			--with-libxml2 \
+			--with-workdir=/var/lib/cfengine3 \
+			--with-logdir=/var/log/cfengine3 \
+			--with-piddir=/run/cfengine3 \
+			--libdir=/usr/lib/cfengine3 \
+			--docdir=\$${prefix}/share/doc/cfengine3 \
+			--datadir=\$${prefix}/share/cfengine3 \
+			--mandir=\$${prefix}/share/man \
+			CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,relro" \
+			CPPFLAGS=-D_FORTIFY_SOURCE=2
 
 override_dh_clean:
 	dh_autoreconf_clean
@@ -38,19 +30,12 @@ override_dh_clean:
 override_dh_compress:
 	dh_compress -X.cf
 
-override_dh_installinfo:
-
 override_dh_strip:
 	dh_strip --dbg-package=cfengine3-dbg
 
 override_dh_installchangelogs:
 	rm debian/cfengine3/usr/share/doc/cfengine3/ChangeLog
 	dh_installchangelogs
-
-##  There is no html documentation
-#
-override_dh_installdocs:
-	dh_installdocs
 
 override_dh_install:
 	dh_testdir
@@ -65,6 +50,15 @@ override_dh_install:
 
 	/bin/rmdir $(CURDIR)/debian/cfengine3/var/lib/cfengine3/inputs
 	/bin/rm $(CURDIR)/debian/cfengine3/usr/lib/*.la
+	/bin/mv $(CURDIR)/debian/cfengine3/usr/share/doc/cfengine3/README.md \
+                $(CURDIR)/debian/cfengine3/usr/share/doc/cfengine3/README
+
+	# libpromises3 package.
+	/bin/mv $(CURDIR)/debian/cfengine3/usr/lib/libpromises.so.* \
+                $(CURDIR)/debian/libpromises3/usr/lib
+	# Get rid of the symlink, no other program will be able to build on this library.
+	/bin/rm $(CURDIR)/debian/cfengine3/usr/lib/libpromises.so
+	/bin/rmdir $(CURDIR)/debian/cfengine3/usr/lib
 
 	## Man pages are created with an undocumented flag
 	#
